@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -33,6 +33,47 @@ type SidePanel = {
   title: string
   content: string
 } | null
+
+type Note = {
+  id: string
+  title: string
+  content: string
+  excerpt: string
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+  type: "journal" | "tache" | "vocal" | "image"
+}
+
+// Storage utilities
+const STORAGE_KEY = "cognos_notes"
+
+const saveNotes = (notes: Note[]) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes))
+  }
+}
+
+const loadNotes = (): Note[] => {
+  if (typeof window === "undefined") return []
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+const generateId = () => Math.random().toString(36).substr(2, 9)
+
+const extractTags = (content: string): string[] => {
+  const matches = content.match(/#[\w\u00C0-\u017F]+/g)
+  return matches ? [...new Set(matches)] : []
+}
+
+const generateExcerpt = (content: string): string => {
+  return content.replace(/#[\w\u00C0-\u017F]+/g, '').trim().slice(0, 100) + (content.length > 100 ? '...' : '')
+}
 
 export default function CognosApp() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("carnet")
